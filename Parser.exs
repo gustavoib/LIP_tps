@@ -90,7 +90,7 @@ defmodule Parser do
           [head7 | s3] = s2
           if head7 == ':=' do
             {e, s4} = expr(s3)
-            {NodeBinario.new(':=', t, e), s4}
+            {NodeBinario.new(:assing, t, e), s4}
           else
             raise "token não identificado"
           end
@@ -175,8 +175,32 @@ defmodule Parser do
   def e_atom(id) do
     Enum.member?([';', :if, :while, :read, :write, ':='], id) or is_atom(id) 
   end
+
+  #FORMATAÇÃO DA SAÍDA
+  def format_tree(node) when is_atom(node) do
+      to_string(node)
+    end
+
+  def format_tree(node) when is_integer(node) do
+    Integer.to_string(node)
+  end
+
+  def format_tree(node) do
+    case node do
+      %NodeBegin{begin: begin, left: left, right: right} ->
+        "#{begin} (#{left} #{format_tree(right)})"
+      %NodeState{state: state, left: left, right: right} ->
+        "#{state} (#{left} #{format_tree(right)})"
+      %NodeUnario{state: state, id: id} ->
+        "(#{state} #{id})"
+      %NodeBinario{operator: operator, left: left, right: right} ->
+        "#{operator} (#{format_tree(left)} #{format_tree(right)})"
+    end
+  end
 end
 
-programa = [:program, 'progName', ';', :while, :x, '<', 3, :do, :x,':=', 1, '+', 54, 'end']
+#CHAMADA DO PROGRAMA
+programa = [:program, 'foo', ';', :while, :a, '+', 3, :do, :b, ':=', :b, '+', 1, 'end']
 {syntatic,sn} = Parser.prog(programa)
-IO.inspect(syntatic)
+syntatic_tree = Parser.format_tree(syntatic)
+IO.puts(syntatic_tree)
